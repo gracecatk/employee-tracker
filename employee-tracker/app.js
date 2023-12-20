@@ -4,12 +4,16 @@ require('console.table');
 
 
 
-var pool = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "pass",
-  database: "company_db"
+const pool = mysql.createPool({
+  host: 'localhost',
+  user: 'root',
+  password: '',
+  database: 'company_db',
+  // Enable logging by setting the 'debug' option to 'true'
+
 });
+ 
+
 
 
 
@@ -69,21 +73,15 @@ function startApp() {
 }
 
 function viewAllDepartments() {
-  const query = 'SELECT * FROM departments';
+  // const query = 'SELECT * FROM departments';
 
-  pool.query(query, (err, results) => {
-    if (err) throw err;
-
-    // Display results in a formatted table
-    console.table(results),
-
-    // After displaying data, call startApp() to return to the main menu
-    startApp();
+  pool.query("SELECT id AS department_id, name AS department_name FROM departments;",  function(err, results) {
+    err? console.log(err): console.table(results, "hey wtf"), startApp();
   });
 }
 
 function viewAllRoles() {
-  const query = 'SELECT * FROM roles';
+  const query = 'SELECT r.id AS role_id,  r.title AS job_title,  r.salary,  d.name AS department_name FROM   roles r JOIN   departments d ON r.department_id = d.id;';
 
   pool.query(query, (err, results) => {
     if (err) throw err;
@@ -98,7 +96,7 @@ function viewAllRoles() {
 
 
 function viewAllEmployees() {
-  const query = 'SELECT * FROM employees';
+  const query = "SELECT  e.id AS employee_id,  e.first_name,  e.last_name,  r.title AS job_title,  d.name AS department,  r.salary,  CONCAT(m.first_name, ' ', m.last_name) AS manager_name FROM   employees e JOIN   roles r ON e.role_id = r.id JOIN   departments d ON r.department_id = d.id LEFT JOIN   employees m ON e.manager_id = m.id;";
 
   pool.query(query, (err, results) => {
     if (err) throw err;
