@@ -4,22 +4,14 @@ require('console.table');
 
 
 
-const pool = mysql.createPool({
-  host: 'localhost',
-  user: 'root',
-  password: 'pass1',
-  database: 'company_db',
+var pool = mysql.createConnection({
+  host: "localhost",
+  user: "root",
+  password: "pass",
+  database: "company_db"
 });
-// Get a connection from the pool
-pool.getConnection((err, connection) => {
-  if (err) {
-    console.error('Error connecting to database:', err);
-    return;
-  }
-  console.log('Connected to MySQL database!');
-  // Release the connection after checking
 
-});
+
 
 
 function startApp() {
