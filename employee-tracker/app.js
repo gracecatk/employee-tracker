@@ -7,7 +7,7 @@ require('console.table');
 const pool = mysql.createPool({
   host: 'localhost',
   user: 'root',
-  password: '',
+  password: 'pass',
   database: 'company_db',
   // Enable logging by setting the 'debug' option to 'true'
 
