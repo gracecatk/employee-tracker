@@ -123,14 +123,22 @@ function addDepartment() {
       pool.query(query, [answer.departmentName], (err, results) => {
         if (err) throw err;
 
-        console.log(`Department '${answer.departmentName}' added successfully.`);
-        startApp();
+        viewAllDepartments();        
       });
     });
 }
 
 
 function addRole() {
+  pool.query("SELECT * FROM departments", function (err, results) {
+    if (err) {
+      console.log(err);
+      return workTime();
+    }
+    const departmentChoices = results.map((department) => ({
+      value: department.id,
+      name: department.name,
+    }));
   inquirer
     .prompt([
       {
@@ -144,9 +152,10 @@ function addRole() {
         message: 'Enter the salary for the role:',
       },
       {
-        type: 'input',
+        type: 'list',
         name: 'departmentId',
         message: 'Enter the department id for the role:',
+        choices: departmentChoices
       },
     ])
     .then((answers) => {
@@ -155,14 +164,37 @@ function addRole() {
       pool.query(query, [answers.roleTitle, answers.roleSalary, answers.departmentId], (err, results) => {
         if (err) throw err;
 
-        console.log(`Role '${answers.roleTitle}' added successfully.`);
-        startApp();
+        viewAllRoles();        
       });
     });
+  });
 }
 
 
 function addEmployee() {
+  pool.query("SELECT * FROM roles", function (err, results) {
+    if (err) {
+      console.log(err);
+      return startApp();
+    }
+
+    const roleChoices = results.map((role) => ({
+      value: role.id,
+      name: role.title,
+    }));
+    pool.query("SELECT * FROM employees", function (err, employeeResults) {
+      if (err) {
+        console.log(err);
+        return startApp();
+      }
+
+      const managerChoices = employeeResults.map((employee) => ({
+        value: employee.id,
+        name: `${employee.first_name} ${employee.last_name}`,
+      }));
+
+      // Add an option for no manager
+      managerChoices.push({ value: null, name: "No Manager" });
   inquirer
     .prompt([
       {
@@ -176,14 +208,16 @@ function addEmployee() {
         message: 'Enter the employee\'s last name:',
       },
       {
-        type: 'input',
+        type: 'list',
         name: 'roleId',
-        message: 'Enter the role id for the employee:',
+        message: 'Enter the role for the employee:',
+        choices: roleChoices
       },
       {
-        type: 'input',
+        type: 'list',
         name: 'managerId',
         message: 'Enter the manager id for the employee:',
+        choices: managerChoices
       },
     ])
     .then((answers) => {
@@ -192,10 +226,12 @@ function addEmployee() {
      pool.query(query, [answers.firstName, answers.lastName, answers.roleId, answers.managerId], (err, results) => {
         if (err) throw err;
 
-        console.log(`Employee '${answers.firstName} ${answers.lastName}' added successfully.`);
-        startApp();
+        viewAllEmployees();       
       });
+    
     });
+  })
+})
 }
 
 
@@ -211,6 +247,18 @@ function updateEmployeeRole() {
       value: employee.id,
     }));
 
+
+    pool.query("SELECT * FROM roles", function (err, results) {
+      if (err) {
+        console.log(err);
+        return startApp();
+      }
+  
+      const roleChoices = results.map((role) => ({
+        value: role.id,
+        name: role.title,
+      }));
+
     inquirer
       .prompt([
         {
@@ -220,9 +268,10 @@ function updateEmployeeRole() {
           choices: employees,
         },
         {
-          type: 'input',
+          type: 'list',
           name: 'newRoleId',
-          message: 'Enter the new role id for the employee:',
+          message: 'Enter the new role for the employee:',
+          choices: roleChoices
         },
       ])
       .then((answers) => {
@@ -231,41 +280,20 @@ function updateEmployeeRole() {
         pool.query(updateQuery, [answers.newRoleId, answers.employeeId], (updateErr, updateResults) => {
           if (updateErr) throw updateErr;
 
-          console.log(`Employee role updated successfully.`);
-          startApp();
+          viewAllEmployees();          
         });
       });
   });
+});
 }
 
+
+function quit() {
+  process.on('exit', () => {
+    console.log('Closing the database connection.');
+    connection.end();
+  });
+}
 
 // You would need to call startApp() to begin the application
 startApp();
-
-
-
-function backToMainMenu() {
-  inquirer
-    .prompt({
-      type: 'confirm',
-      name: 'back',
-      message: 'Return to the main menu?',
-      default: true,
-    })
-    .then((answer) => {
-      if (answer.back) {
-        startApp();
-      } else {
-        console.log('Exiting the application.');
-      }
-    });
-}
-
-console.table(results);
-backToMainMenu();
-
-// Close the database connection when the application is finished
-process.on('exit', () => {
-  console.log('Closing the database connection.');
-  connection.end();
-});
